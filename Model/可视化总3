@@ -1,0 +1,32 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ===================== 中文显示修复 =====================
+plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
+plt.rcParams['axes.unicode_minus'] = False
+
+# ===================== 读取数据 =====================
+df = pd.read_csv("上海数据_全量_20260415104223.csv")
+
+# 统计：年份 + 行政区 的公园数量
+result = df.groupby(['data_year', 'district']).size().unstack(fill_value=0)
+
+print("=== 每年各区口袋公园数量 ===")
+print(result)
+
+# ===================== 绘图：每年各区对比 =====================
+plt.figure(figsize=(16, 8))
+result.plot(kind='bar', ax=plt.gca(), width=0.8)
+
+plt.title('上海市口袋公园 - 各年份各区数量对比', fontsize=16, weight='bold')
+plt.xlabel('年份', fontsize=12)
+plt.ylabel('公园数量', fontsize=12)
+plt.xticks(rotation=0)
+plt.legend(title='行政区', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+
+# 保存图片
+plt.savefig("上海口袋公园_每年各区分布.png", dpi=300)
+plt.show()
+
+print("\n✅ 图表已生成：上海口袋公园_每年各区分布.png")
