@@ -168,7 +168,7 @@ if df_park is not None and 'park_area' in df_park.columns:
     colors = plt.cm.Greens(np.linspace(0.3, 0.8, len(area_counts)))
     ax2.bar(area_counts.index.astype(str), area_counts.values, color=colors, edgecolor='white')
     ax2.set_title('口袋公园面积分布', fontweight='bold')
-    ax2.set_xlabel('面积区间 (m²)')
+    ax2.set_xlabel('面积区间 (平方米)')
     ax2.set_ylabel('公园数量')
 
 # 1.3 花卉热度TOP10
@@ -436,7 +436,7 @@ if df_cost is not None:
     colors = plt.cm.Greens(np.linspace(0.3, 0.8, len(df_sorted)))
     ax3.barh(df_sorted['花卉名称'], df_sorted['月均成本'], color=colors, edgecolor='white')
     ax3.set_title('花卉月均成本排行（性价比TOP12）', fontweight='bold')
-    ax3.set_xlabel('月均成本（元/m²）')
+    ax3.set_xlabel('月均成本（元/平方米）')
     for i, v in enumerate(df_sorted['月均成本']):
         ax3.text(v + 0.05, i, f'{v:.2f}', va='center', fontsize=9)
 
@@ -528,8 +528,8 @@ if df_scheme is not None:
 
     ax2.set_yticks(y)
     ax2.set_yticklabels(scenes)
-    ax2.set_title('各场景成本区间（元/m²）', fontweight='bold')
-    ax2.set_xlabel('成本（元/m²）')
+    ax2.set_title('各场景成本区间（元/平方米）', fontweight='bold')
+    ax2.set_xlabel('成本（元/平方米）')
     ax2.legend()
 
     # 添加数值标注
