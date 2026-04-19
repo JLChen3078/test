@@ -15,17 +15,26 @@ from collections import Counter
 import warnings
 warnings.filterwarnings('ignore')
 
-# 设置中文字体
-matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans', 'Arial Unicode MS']
-matplotlib.rcParams['axes.unicode_minus'] = False
+# 设置中文字体 - 更加可靠的字体配置
+plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'KaiTi', 'SimSun', 'DejaVu Sans', 'Arial Unicode MS']
+plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['font.size'] = 10
+
+# 检查并设置默认字体
+import matplotlib.font_manager as fm
+available_fonts = [f.name for f in fm.fontManager.ttflist]
+print(f"系统可用字体数: {len(available_fonts)}")
+
+# 获取脚本所在目录
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 print("=" * 80)
 print("上海口袋公园花坛美化效果综合分析")
 print("=" * 80)
 
 # 确保输出目录存在
-os.makedirs('charts', exist_ok=True)
-os.makedirs('data', exist_ok=True)
+os.makedirs(os.path.join(script_dir, 'charts_my'), exist_ok=True)
+os.makedirs(os.path.join(script_dir, 'data_my'), exist_ok=True)
 
 # =============================================================================
 # 一、加载数据
@@ -33,12 +42,12 @@ os.makedirs('data', exist_ok=True)
 print("\n【一、加载数据】")
 
 # 加载上海口袋公园数据
-df_shanghai = pd.read_pickle('data/df_shanghai.pkl')
+df_shanghai = pd.read_pickle(os.path.join(script_dir, 'data/df_shanghai.pkl'))
 print(f"口袋公园数据: {len(df_shanghai)} 条记录")
 print(f"列名: {df_shanghai.columns.tolist()}")
 
 # 加载小红书数据
-df_xhs = pd.read_pickle('data/df_xiaohongshu.pkl')
+df_xhs = pd.read_pickle(os.path.join(script_dir, 'data/df_xiaohongshu.pkl'))
 print(f"小红书评论: {len(df_xhs)} 条")
 
 # =============================================================================
@@ -212,7 +221,7 @@ flower_cost_data = [
 ]
 
 df_cost = pd.DataFrame(flower_cost_data, columns=['类别', '花卉名称', '规格', '单价_元_株', '备注'])
-df_cost.to_excel('data/08_花卉经济成本数据库.xlsx', index=False)
+df_cost.to_excel(os.path.join(script_dir, 'data_my/08_花卉经济成本数据库.xlsx'), index=False)
 print(f"花卉成本数据库: {len(df_cost)} 条记录")
 print(df_cost.head(10).to_string())
 
@@ -226,7 +235,7 @@ maintenance_cost_data = [
 ]
 
 df_maintenance = pd.DataFrame(maintenance_cost_data[1:], columns=maintenance_cost_data[0])
-df_maintenance.to_excel('data/09_绿化养护成本参考.xlsx', index=False)
+df_maintenance.to_excel(os.path.join(script_dir, 'data_my/09_绿化养护成本参考.xlsx'), index=False)
 print("\n绿化养护成本参考表:")
 print(df_maintenance.to_string())
 
@@ -234,6 +243,15 @@ print(df_maintenance.to_string())
 # 五、数据可视化
 # =============================================================================
 print("\n【五、数据可视化】")
+
+# 重置字体配置函数
+def reset_font_config():
+    """确保中文字体正确加载"""
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'KaiTi', 'SimSun', 'DejaVu Sans']
+    plt.rcParams['axes.unicode_minus'] = False
+    plt.rcParams['font.size'] = 10
+
+reset_font_config()
 
 # 设置图表风格
 plt.style.use('seaborn-v0_8-whitegrid')
@@ -326,12 +344,14 @@ wedges, texts, autotexts = ax6.pie(sentiment_values, explode=explode, labels=sen
 ax6.set_title('小红书评论情感分析', fontsize=14, fontweight='bold')
 
 plt.tight_layout()
-plt.savefig('charts/01_综合分析图表.png', dpi=150, bbox_inches='tight', facecolor='white')
-print("图表1已保存: charts/01_综合分析图表.png")
+plt.savefig(os.path.join(script_dir, 'charts_my/01_综合分析图表.png'), dpi=150, bbox_inches='tight', facecolor='white')
+print("图表1已保存: ", os.path.join(script_dir, 'charts_my/01_综合分析图表.png'))
 
 # =============================================================================
 # 六、花卉成本可视化
 # =============================================================================
+reset_font_config()
+
 fig2, axes2 = plt.subplots(1, 2, figsize=(16, 6))
 fig2.suptitle('花卉经济成本分析', fontsize=16, fontweight='bold', y=1.02)
 
@@ -365,8 +385,8 @@ for bar, val in zip(bars, hot_flower_prices.values):
     ax2.text(bar.get_width() + 0.2, bar.get_y() + bar.get_height()/2, f'{val:.1f}', ha='left', va='center', fontsize=10)
 
 plt.tight_layout()
-plt.savefig('charts/02_花卉成本分析.png', dpi=150, bbox_inches='tight', facecolor='white')
-print("图表2已保存: charts/02_花卉成本分析.png")
+plt.savefig(os.path.join(script_dir, 'charts_my/02_花卉成本分析.png'), dpi=150, bbox_inches='tight', facecolor='white')
+print("图表2已保存: ", os.path.join(script_dir, 'charts_my/02_花卉成本分析.png'))
 
 # =============================================================================
 # 七、输出分析报告
@@ -480,11 +500,17 @@ report += f"""
 """
 
 # 保存报告
-with open('data/综合分析报告.txt', 'w', encoding='utf-8') as f:
+with open(os.path.join(script_dir, 'data_my/综合分析报告.txt'), 'w', encoding='utf-8') as f:
     f.write(report)
 
-print(report)
-print("\n报告已保存: data/综合分析报告.txt")
+# 使用 errors='ignore' 来处理输出编码问题
+import sys
+try:
+    print(report)
+except UnicodeEncodeError:
+    print(report.encode(sys.stdout.encoding or 'utf-8', errors='ignore').decode(sys.stdout.encoding or 'utf-8', errors='ignore'))
+
+print("\n报告已保存: ", os.path.join(script_dir, 'data_my/综合分析报告.txt'))
 
 # =============================================================================
 # 八、保存分析数据
@@ -495,18 +521,18 @@ print("\n【七、保存分析数据】")
 df_xhs_analysis = df_xhs[['文本', '提及花卉', '提及公园', '情感']].copy()
 df_xhs_analysis['花卉汇总'] = df_xhs_analysis['提及花卉'].apply(lambda x: ','.join(x) if x else '')
 df_xhs_analysis['公园汇总'] = df_xhs_analysis['提及公园'].apply(lambda x: ','.join(x) if x else '')
-df_xhs_analysis.to_excel('data/10_小红书评论分析结果.xlsx', index=False)
-print("小红书分析结果已保存: data/10_小红书评论分析结果.xlsx")
+df_xhs_analysis.to_excel(os.path.join(script_dir, 'data_my/10_小红书评论分析结果.xlsx'), index=False)
+print("小红书分析结果已保存: ", os.path.join(script_dir, 'data_my/10_小红书评论分析结果.xlsx'))
 
 # 保存花卉词频统计
 flower_freq_df = pd.DataFrame(flower_counts.most_common(), columns=['花卉名称', '提及次数'])
-flower_freq_df.to_excel('data/11_花卉词频统计.xlsx', index=False)
-print("花卉词频统计已保存: data/11_花卉词频统计.xlsx")
+flower_freq_df.to_excel(os.path.join(script_dir, 'data_my/11_花卉词频统计.xlsx'), index=False)
+print("花卉词频统计已保存: ", os.path.join(script_dir, 'data_my/11_花卉词频统计.xlsx'))
 
 # 保存公园词频统计
 park_freq_df = pd.DataFrame(park_counts.most_common(), columns=['地点名称', '提及次数'])
-park_freq_df.to_excel('data/12_公园词频统计.xlsx', index=False)
-print("公园词频统计已保存: data/12_公园词频统计.xlsx")
+park_freq_df.to_excel(os.path.join(script_dir, 'data_my/12_公园词频统计.xlsx'), index=False)
+print("公园词频统计已保存: ", os.path.join(script_dir, 'data_my/12_公园词频统计.xlsx'))
 
 print("\n" + "=" * 80)
 print("分析完成！")
