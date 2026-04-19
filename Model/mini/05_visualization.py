@@ -115,7 +115,7 @@ if weights_file.exists():
 df_cluster = None
 cluster_file = DATA_OUTPUT_DIR / '17_口袋公园聚类结果.xlsx'
 if cluster_file.exists():
-    df_cluster = pd.read_pickle(cluster_file)
+    df_cluster = pd.read_excel(cluster_file)
     print(f"✓ 聚类结果: {len(df_cluster)} 条")
 
 # 加载花卉成本
