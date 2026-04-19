@@ -4,11 +4,17 @@
 import pandas as pd
 import numpy as np
 import os
+from pathlib import Path
 from collections import Counter
 
+# ===================== 路径配置 =====================
+SCRIPT_DIR = Path(__file__).resolve().parent
+DATA_OUTPUT_DIR = SCRIPT_DIR / "data_my"
+os.makedirs(DATA_OUTPUT_DIR, exist_ok=True)
+
 # 加载数据
-df_shanghai = pd.read_pickle('data/df_shanghai.pkl')
-df_xhs = pd.read_pickle('data/df_xiaohongshu.pkl')
+df_shanghai = pd.read_pickle(DATA_OUTPUT_DIR / 'df_shanghai.pkl_2')
+df_xhs = pd.read_pickle(DATA_OUTPUT_DIR / 'df_xiaohongshu.pkl_2')
 
 # 定义关键词
 flower_keywords = ['月季', '玫瑰', '樱花', '郁金香', '绣球', '薰衣草', '向日葵', '菊花',
@@ -151,25 +157,25 @@ report += f"""
 """
 
 # 保存报告
-with open('data/综合分析报告.txt', 'w', encoding='utf-8') as f:
+with open(DATA_OUTPUT_DIR / '综合分析报告.txt', 'w', encoding='utf-8') as f:
     f.write(report)
 
-print("报告已保存: data/综合分析报告.txt")
+print(f"报告已保存: {DATA_OUTPUT_DIR / '综合分析报告.txt'}")
 
 # 保存分析结果
 df_xhs_analysis = df_xhs[['文本', '情感']].copy()
 df_xhs_analysis['提及花卉'] = df_xhs['提及花卉'].apply(lambda x: ','.join(x) if x else '')
 df_xhs_analysis['提及公园'] = df_xhs['提及公园'].apply(lambda x: ','.join(x) if x else '')
-df_xhs_analysis.to_excel('data/10_小红书评论分析结果.xlsx', index=False)
-print("小红书分析结果已保存: data/10_小红书评论分析结果.xlsx")
+df_xhs_analysis.to_excel(DATA_OUTPUT_DIR / '10_小红书评论分析结果.xlsx', index=False)
+print(f"小红书分析结果已保存: {DATA_OUTPUT_DIR / '10_小红书评论分析结果.xlsx'}")
 
 # 保存词频统计
 flower_freq_df = pd.DataFrame(flower_counts.most_common(), columns=['花卉名称', '提及次数'])
-flower_freq_df.to_excel('data/11_花卉词频统计.xlsx', index=False)
-print("花卉词频统计已保存: data/11_花卉词频统计.xlsx")
+flower_freq_df.to_excel(DATA_OUTPUT_DIR / '11_花卉词频统计.xlsx', index=False)
+print(f"花卉词频统计已保存: {DATA_OUTPUT_DIR / '11_花卉词频统计.xlsx'}")
 
 park_freq_df = pd.DataFrame(park_counts.most_common(), columns=['地点名称', '提及次数'])
-park_freq_df.to_excel('data/12_公园词频统计.xlsx', index=False)
-print("公园词频统计已保存: data/12_公园词频统计.xlsx")
+park_freq_df.to_excel(DATA_OUTPUT_DIR / '12_公园词频统计.xlsx', index=False)
+print(f"公园词频统计已保存: {DATA_OUTPUT_DIR / '12_公园词频统计.xlsx'}")
 
 print("\n所有数据文件生成完毕！")

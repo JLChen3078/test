@@ -1,5 +1,12 @@
 import pandas as pd
 import numpy as np
+import os
+from pathlib import Path
+
+# ===================== 路径配置 =====================
+SCRIPT_DIR = Path(__file__).resolve().parent
+DATA_OUTPUT_DIR = SCRIPT_DIR / "data_my"
+os.makedirs(DATA_OUTPUT_DIR, exist_ok=True)
 
 # 1. 创建区级绿化指标数据
 district_data = {
@@ -21,8 +28,8 @@ print("=" * 60)
 print("1. 区级绿化指标数据")
 print("=" * 60)
 print(df_district.to_string(index=False))
-df_district.to_excel('data/01_区级绿化指标数据_2024.xlsx', index=False)
-print("已保存: data/01_区级绿化指标数据_2024.xlsx\n")
+df_district.to_excel(DATA_OUTPUT_DIR / '01_区级绿化指标数据_2024.xlsx', index=False)
+print(f"已保存: {DATA_OUTPUT_DIR / '01_区级绿化指标数据_2024.xlsx'}\n")
 
 # 2. 创建口袋公园名录数据
 pocket_parks_data = {
@@ -92,8 +99,8 @@ print("2. 口袋公园名录数据")
 print("=" * 60)
 print(df_parks.head(20).to_string(index=False))
 print(f"\n总计 {len(df_parks)} 个口袋公园")
-df_parks.to_excel('data/02_口袋公园名录数据.xlsx', index=False)
-print("已保存: data/02_口袋公园名录数据.xlsx\n")
+df_parks.to_excel(DATA_OUTPUT_DIR / '02_口袋公园名录数据.xlsx', index=False)
+print(f"已保存: {DATA_OUTPUT_DIR / '02_口袋公园名录数据.xlsx'}\n")
 
 # 3. 创建乡土植物特性数据库（示例模板）
 plant_species = [
@@ -160,8 +167,8 @@ print("3. 乡土植物特性数据库")
 print("=" * 60)
 print(df_plants_full.head(15).to_string(index=False))
 print(f"\n总计 {len(df_plants_full)} 种植物")
-df_plants_full.to_excel('data/03_乡土植物特性数据库.xlsx', index=False)
-print("已保存: data/03_乡土植物特性数据库.xlsx\n")
+df_plants_full.to_excel(DATA_OUTPUT_DIR / '03_乡土植物特性数据库.xlsx', index=False)
+print(f"已保存: {DATA_OUTPUT_DIR / '03_乡土植物特性数据库.xlsx'}\n")
 
 # 4. 创建成本参考数据
 cost_data = {
@@ -184,8 +191,8 @@ print("=" * 60)
 print("4. 成本参考数据")
 print("=" * 60)
 print(df_costs.to_string(index=False))
-df_costs.to_excel('data/04_成本参考数据.xlsx', index=False)
-print("已保存: data/04_成本参考数据.xlsx\n")
+df_costs.to_excel(DATA_OUTPUT_DIR / '04_成本参考数据.xlsx', index=False)
+print(f"已保存: {DATA_OUTPUT_DIR / '04_成本参考数据.xlsx'}\n")
 
 # 5. 创建公众满意度调查问卷模板
 survey_questions = [
@@ -207,8 +214,8 @@ print("=" * 60)
 print("5. 公众满意度调查问卷模板")
 print("=" * 60)
 print(df_survey.to_string(index=False))
-df_survey.to_excel('data/05_公众满意度调查问卷模板.xlsx', index=False)
-print("已保存: data/05_公众满意度调查问卷模板.xlsx\n")
+df_survey.to_excel(DATA_OUTPUT_DIR / '05_公众满意度调查问卷模板.xlsx', index=False)
+print(f"已保存: {DATA_OUTPUT_DIR / '05_公众满意度调查问卷模板.xlsx'}\n")
 
 # 6. 创建标准化处理模板
 standardization_template = {
@@ -243,8 +250,8 @@ print("=" * 60)
 print("6. 数据标准化处理模板")
 print("=" * 60)
 print(df_std.to_string(index=False))
-df_std.to_excel('data/06_数据标准化处理模板.xlsx', index=False)
-print("已保存: data/06_数据标准化处理模板.xlsx\n")
+df_std.to_excel(DATA_OUTPUT_DIR / '06_数据标准化处理模板.xlsx', index=False)
+print(f"已保存: {DATA_OUTPUT_DIR / '06_数据标准化处理模板.xlsx'}\n")
 
 # 7. 创建熵权法计算模板
 entropy_template = {
@@ -284,8 +291,8 @@ print("=" * 60)
 print("7. 熵权法计算模板")
 print("=" * 60)
 print(df_entropy.to_string(index=False))
-df_entropy.to_excel('data/07_熵权法计算模板.xlsx', index=False)
-print("已保存: data/07_熵权法计算模板.xlsx\n")
+df_entropy.to_excel(DATA_OUTPUT_DIR / '07_熵权法计算模板.xlsx', index=False)
+print(f"已保存: {DATA_OUTPUT_DIR / '07_熵权法计算模板.xlsx'}\n")
 
 print("=" * 60)
 print("数据文件创建完成！")

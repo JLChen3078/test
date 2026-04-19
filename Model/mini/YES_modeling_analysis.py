@@ -11,7 +11,18 @@ import matplotlib
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import MinMaxScaler
 import warnings
+import os
+from pathlib import Path
+
 warnings.filterwarnings('ignore')
+
+# ===================== 路径配置 =====================
+SCRIPT_DIR = Path(__file__).resolve().parent
+DATA_OUTPUT_DIR = SCRIPT_DIR / "data_my"
+RESULT_OUTPUT_DIR = SCRIPT_DIR / "result_analysis"
+CHART_OUTPUT_DIR = RESULT_OUTPUT_DIR / "charts"
+os.makedirs(RESULT_OUTPUT_DIR, exist_ok=True)
+os.makedirs(CHART_OUTPUT_DIR, exist_ok=True)
 
 # 设置中文字体
 matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Arial Unicode MS', 'DejaVu Sans']
@@ -27,16 +38,54 @@ print("=" * 80)
 print("\n【一、数据加载与预处理】")
 
 # 加载口袋公园数据
-df_shanghai = pd.read_pickle('data/df_shanghai.pkl')
-print(f"口袋公园数据: {len(df_shanghai)} 条")
+pickle_file = DATA_OUTPUT_DIR / 'df_shanghai.pkl_2'
+if not pickle_file.exists():
+    # 如果 pkl_2 不存在，尝试 pkl
+    pickle_file = DATA_OUTPUT_DIR / 'df_shanghai.pkl'
+if not pickle_file.exists():
+    print(f"错误：找不到口袋公园数据文件。请确保以下文件存在：")
+    print(f"  - {DATA_OUTPUT_DIR / 'df_shanghai.pkl_2'}")
+    print(f"  - {DATA_OUTPUT_DIR / 'df_shanghai.pkl'}")
+    print(f"\n请先运行 step2.py 生成数据文件")
+    exit(1)
 
-# 加载花卉成本数据
-df_cost = pd.read_excel('data/08_花卉经济成本数据库.xlsx')
-print(f"花卉成本数据: {len(df_cost)} 条")
+try:
+    df_shanghai = pd.read_pickle(pickle_file)
+    print(f"口袋公园数据: {len(df_shanghai)} 条 (来自: {pickle_file.name})")
+except Exception as e:
+    print(f"读取口袋公园数据失败: {e}")
+    exit(1)
 
-# 加载词频数据
-df_flower_freq = pd.read_excel('data/11_花卉词频统计.xlsx')
-df_park_freq = pd.read_excel('data/12_公园词频统计.xlsx')
+# 加载花卉成本数据（可选，如果不存在则跳过）
+cost_file = DATA_OUTPUT_DIR / '08_花卉经济成本数据库.xlsx'
+if cost_file.exists():
+    try:
+        df_cost = pd.read_excel(cost_file)
+        print(f"花卉成本数据: {len(df_cost)} 条")
+    except Exception as e:
+        print(f"警告：读取花卉成本数据失败 {e}")
+        df_cost = None
+else:
+    print(f"警告：找不到 {cost_file.name}，将使用默认成本数据")
+    df_cost = None
+
+# 加载词频数据（可选）
+flower_freq_file = DATA_OUTPUT_DIR / '11_花卉词频统计.xlsx'
+park_freq_file = DATA_OUTPUT_DIR / '12_公园词频统计.xlsx'
+
+if flower_freq_file.exists() and park_freq_file.exists():
+    try:
+        df_flower_freq = pd.read_excel(flower_freq_file)
+        df_park_freq = pd.read_excel(park_freq_file)
+        print(f"花卉词频统计: {len(df_flower_freq)} 条")
+    except Exception as e:
+        print(f"警告：读取词频数据失败 {e}")
+        df_flower_freq = None
+        df_park_freq = None
+else:
+    print(f"警告：找不到词频统计文件，将使用模拟数据")
+    df_flower_freq = None
+    df_park_freq = None
 
 # 构建评价指标矩阵（模拟数据，实际应用中需要真实调查数据）
 print("\n构建评价指标体系...")
@@ -50,11 +99,17 @@ district_stats.columns = ['区', '公园数量', '总面积', '平均面积']
 district_stats['平均面积'] = district_stats['平均面积'].fillna(district_stats['平均面积'].mean())
 
 # 添加花卉热度评分（基于小红书分析）
-flower_popularity = dict(zip(df_flower_freq['花卉名称'], df_flower_freq['提及次数']))
+if df_flower_freq is not None:
+    flower_popularity = dict(zip(df_flower_freq['花卉名称'], df_flower_freq['提及次数']))
+else:
+    flower_popularity = {}
 district_stats['花卉热度'] = district_stats['区'].apply(lambda x: sum(flower_popularity.get(f, 0) for f in ['月季', '郁金香', '牡丹', '绣球', '樱花']))
 
 # 添加公园热度评分
-park_popularity = dict(zip(df_park_freq['地点名称'], df_park_freq['提及次数']))
+if df_park_freq is not None:
+    park_popularity = dict(zip(df_park_freq['地点名称'], df_park_freq['提及次数']))
+else:
+    park_popularity = {}
 district_stats['公园热度'] = district_stats['区'].apply(lambda x: park_popularity.get(x, 1))
 
 # 模拟花卉景观覆盖率（假设基于公园数量推算）
@@ -173,8 +228,8 @@ print("-" * 50)
 print(f"权重合计: {weights.sum()*100:.2f}%")
 
 # 保存权重结果
-df_weights.to_excel('data/13_熵权法指标权重.xlsx', index=False)
-print("\n权重结果已保存: data/13_熵权法指标权重.xlsx")
+df_weights.to_excel(DATA_OUTPUT_DIR / '13_熵权法指标权重.xlsx', index=False)
+print(f"\n权重结果已保存: {DATA_OUTPUT_DIR / '13_熵权法指标权重.xlsx'}")
 
 # =============================================================================
 # 三、TOPSIS评价
@@ -220,8 +275,8 @@ top_districts = df_evaluation.head(3)['区'].tolist()
 print(f"\n🏆 绿化标杆区域（TOP3）: {', '.join(top_districts)}")
 
 # 保存评价结果
-df_evaluation.to_excel('data/14_TOPSIS评价结果.xlsx', index=False)
-print("评价结果已保存: data/14_TOPSIS评价结果.xlsx")
+df_evaluation.to_excel(DATA_OUTPUT_DIR / '14_TOPSIS评价结果.xlsx', index=False)
+print(f"评价结果已保存: {DATA_OUTPUT_DIR / '14_TOPSIS评价结果.xlsx'}")
 
 # =============================================================================
 # 四、K-Means聚类分析
@@ -268,8 +323,8 @@ scene_stats.columns = ['公园数量', '平均花卉丰富度', '平均景观整
 print(scene_stats.to_string())
 
 # 保存聚类结果
-df_park_cluster.to_excel('data/15_口袋公园聚类结果.xlsx', index=False)
-print("\n聚类结果已保存: data/15_口袋公园聚类结果.xlsx")
+df_park_cluster.to_excel(DATA_OUTPUT_DIR / '15_口袋公园聚类结果.xlsx', index=False)
+print(f"\n聚类结果已保存: {DATA_OUTPUT_DIR / '15_口袋公园聚类结果.xlsx'}")
 
 # =============================================================================
 # 五、多目标优化模型
@@ -328,8 +383,8 @@ for scene, scheme in optimization_schemes.items():
 df_schemes = pd.DataFrame([
     {'场景类型': k, **v} for k, v in optimization_schemes.items()
 ])
-df_schemes.to_excel('data/16_分场景花卉优化配置方案.xlsx', index=False)
-print("\n优化方案已保存: data/16_分场景花卉优化配置方案.xlsx")
+df_schemes.to_excel(DATA_OUTPUT_DIR / '16_分场景花卉优化配置方案.xlsx', index=False)
+print(f"\n优化方案已保存: {DATA_OUTPUT_DIR / '16_分场景花卉优化配置方案.xlsx'}")
 
 # =============================================================================
 # 六、花卉推荐清单
@@ -339,22 +394,26 @@ print("【六、基于小红书热度的花卉推荐清单】")
 print("=" * 80)
 
 # 根据小红书热度排名推荐花卉
-print("\n高热度花卉推荐（社交媒体效应强）:")
-top_flowers = df_flower_freq.head(10)
-for i, row in top_flowers.iterrows():
-    print(f"  {i+1}. {row['花卉名称']}: {row['提及次数']}次提及")
+if df_flower_freq is not None:
+    print("\n高热度花卉推荐（社交媒体效应强）:")
+    top_flowers = df_flower_freq.head(10)
+    for i, row in top_flowers.iterrows():
+        print(f"  {i+1}. {row['花卉名称']}: {row['提及次数']}次提及")
 
-# 结合成本数据推荐
-print("\n\n性价比推荐（热度+成本综合）:")
-cost_avg = df_cost.groupby('花卉名称')['单价_元_株'].mean().to_dict()
+    # 结合成本数据推荐
+    print("\n\n性价比推荐（热度+成本综合）:")
+    if df_cost is not None:
+        cost_avg = df_cost.groupby('花卉名称')['单价_元_株'].mean().to_dict()
+    else:
+        cost_avg = {}
 
-recommendations = []
-for _, row in df_flower_freq.iterrows():
-    flower = row['花卉名称']
-    freq = row['提及次数']
-    cost = cost_avg.get(flower, 15.0)  # 默认成本
-    score = freq / cost if cost > 0 else 0
-    recommendations.append({
+    recommendations = []
+    for _, row in df_flower_freq.iterrows():
+        flower = row['花卉名称']
+        freq = row['提及次数']
+        cost = cost_avg.get(flower, 15.0)  # 默认成本
+        score = freq / cost if cost > 0 else 0
+        recommendations.append({
         '花卉': flower,
         '热度': freq,
         '参考成本': cost,
@@ -365,8 +424,8 @@ df_recommend = pd.DataFrame(recommendations).sort_values('性价比', ascending=
 print(df_recommend.to_string(index=False))
 
 # 保存推荐清单
-df_recommend.to_excel('data/17_花卉性价比推荐清单.xlsx', index=False)
-print("\n推荐清单已保存: data/17_花卉性价比推荐清单.xlsx")
+df_recommend.to_excel(DATA_OUTPUT_DIR / '17_花卉性价比推荐清单.xlsx', index=False)
+print(f"\n推荐清单已保存: {DATA_OUTPUT_DIR / '17_花卉性价比推荐清单.xlsx'}")
 
 # =============================================================================
 # 七、可视化
@@ -406,18 +465,22 @@ ax3.set_title('口袋公园场景类型分布', fontweight='bold')
 
 # 4. 花卉热度排行
 ax4 = axes[1, 1]
-top_n = 10
-top_flower_data = df_flower_freq.head(top_n).iloc[::-1]
-colors_flower = plt.cm.Reds(np.linspace(0.3, 0.9, top_n))
-bars = ax4.barh(top_flower_data['花卉名称'], top_flower_data['提及次数'], color=colors_flower)
-ax4.set_xlabel('提及次数')
-ax4.set_title('小红书热门花卉 TOP10', fontweight='bold')
-for bar, val in zip(bars, top_flower_data['提及次数']):
-    ax4.text(val + 2, bar.get_y() + bar.get_height()/2, str(val), va='center', fontsize=9)
+if df_flower_freq is not None:
+    top_n = min(10, len(df_flower_freq))
+    top_flower_data = df_flower_freq.head(top_n).iloc[::-1]
+    colors_flower = plt.cm.Reds(np.linspace(0.3, 0.9, top_n))
+    bars = ax4.barh(top_flower_data['花卉名称'], top_flower_data['提及次数'], color=colors_flower)
+    ax4.set_xlabel('提及次数')
+    ax4.set_title('小红书热门花卉 TOP10', fontweight='bold')
+    for bar, val in zip(bars, top_flower_data['提及次数']):
+        ax4.text(val + 2, bar.get_y() + bar.get_height()/2, str(val), va='center', fontsize=9)
+else:
+    ax4.text(0.5, 0.5, '暂无花卉热度数据', ha='center', va='center', transform=ax4.transAxes)
+    ax4.set_title('小红书热门花卉 TOP10', fontweight='bold')
 
 plt.tight_layout()
-plt.savefig('charts/03_建模评价结果.png', dpi=150, bbox_inches='tight', facecolor='white')
-print("\n图表已保存: charts/03_建模评价结果.png")
+plt.savefig(CHART_OUTPUT_DIR / '建模评价结果.png', dpi=150, bbox_inches='tight', facecolor='white')
+print(f"\n图表已保存: {CHART_OUTPUT_DIR / '建模评价结果.png'}")
 
 # =============================================================================
 # 八、输出建模分析报告
@@ -435,8 +498,8 @@ report = f"""
 --------------------------------------------------------------------------------
 • 口袋公园样本: {len(df_shanghai)} 个
 • 覆盖区县: {len(district_stats)} 个
-• 小红书评论样本: 2288 条
-• 花卉成本数据: {len(df_cost)} 条
+• 小红书评论样本: {len(df_flower_freq) if df_flower_freq is not None else 0} 条
+• 花卉成本数据: {len(df_cost) if df_cost is not None else 0} 条
 
 二、熵权法客观赋权结果
 --------------------------------------------------------------------------------
@@ -558,11 +621,11 @@ report += f"""
 print(report)
 
 # 保存报告
-with open('data/建模分析报告.txt', 'w', encoding='utf-8') as f:
+with open(DATA_OUTPUT_DIR / '建模分析报告.txt', 'w', encoding='utf-8') as f:
     f.write(report)
 
-print("\n报告已保存: data/建模分析报告.txt")
+print(f"\n报告已保存: {DATA_OUTPUT_DIR / '建模分析报告.txt'}")
 
 print("\n" + "=" * 80)
-print("建模分析完成！所有结果已保存到 data/ 目录")
+print("建模分析完成！所有结果已保存到 data_my/ 目录")
 print("=" * 80)
